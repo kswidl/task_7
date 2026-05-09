@@ -2,19 +2,39 @@ const EventEmitter = require("events");
 
 const bus = new EventEmitter();
 
-bus.on("message", (data) => {
+function subscribe(eventName, listener) {
+    bus.on(eventName, listener);
+
+    return function unsubscribe() {
+        bus.off(eventName, listener);
+    }
+}
+
+const unsubscribeUser = subscribe("message", (data) => {
     console.log(`User received message: ${data.text}`);
 });
 
-bus.on("message", (data) => {
+const unsubscribeLogger = subscribe("message", (data) => {
     console.log(`Logger saved message from ${data.sender}`);
 });
 
-bus.on("message", (data) => {
-    console.log(`Notification sent about new message`);
+const unsubscribeNotification = subscribe("message", () => {
+    console.log("Notification sent about new message");
 });
 
 bus.emit("message", {
     sender: "Alice",
-    text: "Hello from another entity!"
+    text: "First message"
 });
+
+console.log("--- User unsubscribed ---");
+
+unsubscribeUser();
+
+bus.emit("message", {
+    sender: "Bob",
+    text: "Second message"
+});
+
+unsubscribeLogger();
+unsubscribeNotification();
