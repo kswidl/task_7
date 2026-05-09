@@ -10,31 +10,41 @@ function subscribe(eventName, listener) {
     }
 }
 
-const unsubscribeUser = subscribe("message", (data) => {
-    console.log(`User received message: ${data.text}`);
+function sendMessage(sender, text) {
+    bus.emit("message", {
+        sender,
+        text
+    });
+}
+
+const unsubscribeAlice = subscribe("message", (data) => {
+    if (data.sender !== "Alice"){
+        console.log(`Alice received message from ${data.sender}: ${data.text}`);
+    }
+});
+
+const unsubscribeBob = subscribe("message", (data) => {
+    if (data.sender !== "Bob") {
+        console.log(`Bob received message from ${data.sender}: ${data.text}`);
+    }
 });
 
 const unsubscribeLogger = subscribe("message", (data) => {
-    console.log(`Logger saved message from ${data.sender}`);
+    console.log(`Logger saved message: "${data.text}" from ${data.sender}`);
 });
 
-const unsubscribeNotification = subscribe("message", () => {
-    console.log("Notification sent about new message");
-});
+console.log("=== Communication started ===");
 
-bus.emit("message", {
-    sender: "Alice",
-    text: "First message"
-});
+sendMessage("Alice", "Hello, Bob!");
+sendMessage("Bob", "Hi, Alice!");
 
-console.log("--- User unsubscribed ---");
+console.log("--- Bob unsubscribed ---");
 
-unsubscribeUser();
+unsubscribeBob();
 
-bus.emit("message", {
-    sender: "Bob",
-    text: "Second message"
-});
+sendMessage("Alice", "Bob should not receive this message.");
 
+unsubscribeAlice();
 unsubscribeLogger();
-unsubscribeNotification();
+
+console.log("=== Communication finished ===");
